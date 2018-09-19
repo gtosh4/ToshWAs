@@ -4,7 +4,6 @@ https://wago.io/Sk9Klggt7
 ## Raid CDs
 https://wago.io/rJ3tSWjdX
 ### Supported Spells
-  -  [](https://www.wowhead.com/spell=)
 - Demon Hunter / Havoc
   -  [Darkness](https://www.wowhead.com/spell=196718)
 - Druid / Restoration
