@@ -17,7 +17,6 @@ function(allstates, event, ...)
           local key = sourceGUID .. spellId
           local state = allstates[key]
           if not state then return end
-          -- print("found state for guid="..sourceGUID.." spellId="..spellId)
           local info = state.cdInfo
           state.sourceName = state.name
           state.expirationTime = state.duration + GetTime()
@@ -44,10 +43,9 @@ function(allstates, event, ...)
       end
 
       local hascds = false
-      for uid in aura_env.GroupMembers() do
+      for uid in WA_IterateGroupMembers() do
           local info = aura_env.inspectLib:GetCachedInfo(UnitGUID(uid))
           if info then
-              -- print("found info for "..uid.." name="..info.name.." guid="..info.guid.." class="..info.class.." specId="..info.global_spec_id)
               local cds = aura_env.specCDs[info.global_spec_id]
               if cds then
                   for spellId, cdInfo in pairs(cds) do
@@ -78,17 +76,12 @@ function(allstates, event, ...)
                               }
                           end
                           hascds = true
-                          -- print("created cd for "..info.name.." for spell "..spellId)
                       end
                   end
               end
           end
       end
 
-
-      -- for k,v in pairs(allstates) do
-      --    print((v.show and "" or "(hidden) ").."state "..k.. " = {guid="..(v.sourceGUID or "nil")..", spellId="..(v.spellId or "nil").."}")
-      -- end
       return true
   end
 end

@@ -30,7 +30,6 @@ function(allstates, event, ...)
             local key = sourceGUID .. spellId
             local state = allstates[key]
             if not state then return end
-            -- print("found state for guid="..sourceGUID.." spellId="..spellId)
             local info = state.cdInfo
             if (info.duration or 0) > 0 then
                 state.duration = info.duration
@@ -56,10 +55,9 @@ function(allstates, event, ...)
         end
 
         local hascds = false
-        for uid in aura_env.GroupMembers() do
+        for uid in WA_IterateGroupMembers() do
             local info = aura_env.inspectLib:GetCachedInfo(UnitGUID(uid))
             if info then
-                -- print("found info for "..uid.." name="..info.name.." guid="..info.guid.." class="..info.class.." specId="..info.global_spec_id)
                 local cds = aura_env.specCDs[info.global_spec_id]
                 if cds then
                     for spellId, cdInfo in pairs(cds) do
@@ -90,17 +88,12 @@ function(allstates, event, ...)
                                 }
                             end
                             hascds = true
-                            -- print("created cd for "..info.name.." for spell "..spellId)
                         end
                     end
                 end
             end
         end
 
-
-        -- for k,v in pairs(allstates) do
-        --    print((v.show and "" or "(hidden) ").."state "..k.. " = {guid="..(v.sourceGUID or "nil")..", spellId="..(v.spellId or "nil").."}")
-        -- end
         return true
     end
 end
@@ -272,27 +265,6 @@ local inspectCallback = {
 aura_env.inspectLib.RegisterCallback(inspectCallback, "GroupInSpecT_Update", "Update")
 aura_env.inspectLib.RegisterCallback(inspectCallback, "GroupInSpecT_Remove", "Remove")
 
---https://wago.io/profile/asakawa
---usage:
---for unit in aura_env.GroupMembers() do
--- --do stuff
---end
-function aura_env.GroupMembers(reversed, forceParty)
-    local unit  = (not forceParty and IsInRaid()) and 'raid' or 'party'
-    local numGroupMembers = forceParty and GetNumSubgroupMembers()  or GetNumGroupMembers()
-    local i = reversed and numGroupMembers or (unit == 'party' and 0 or 1)
-    return function()
-        local ret
-        if i == 0 and unit == 'party' then
-            ret = 'player'
-        elseif i <= numGroupMembers and i > 0 then
-            ret = unit .. i
-        end
-        i = i + (reversed and -1 or 1)
-        return ret
-    end
-end
-
 function aura_env.getColor(info)
     local classcolor = RAID_CLASS_COLORS[info.class]
     if not classcolor then return end
@@ -304,7 +276,7 @@ end
 function aura_env.owner(guid)
     local type = strsplit("-",guid)
     if type == "Pet" then
-        for unit in aura_env.GroupMembers() do
+        for unit in WA_IterateGroupMembers() do
             if UnitGUID(unit.."pet") == guid then
                 return UnitGUID(unit)
             end
