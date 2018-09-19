@@ -1,6 +1,8 @@
 # ToshWAs
 https://wago.io/Sk9Klggt7
 
+![screenshot](example.png)
+
 ## Raid CDs
 https://wago.io/rJ3tSWjdX
 ### Supported Spells
