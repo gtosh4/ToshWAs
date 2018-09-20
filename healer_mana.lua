@@ -53,6 +53,7 @@ aura_env.config = {
 
 aura_env.healSpecs = {
     [105] = true, -- Restoration Druid
+    [270] = true, -- Mistweaver Monk
     [65] = true, -- Holy Paladin
     [256] = true, -- Discipline Priest
     [257] = true, -- Holy Priest
