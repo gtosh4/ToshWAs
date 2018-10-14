@@ -14,11 +14,13 @@ https://wago.io/rJ3tSWjdX
   -  [Revival](https://www.wowhead.com/spell=115310)
 - Paladin / Holy
   -  [Aura Mastery](https://www.wowhead.com/spell=31821)
+  -  [Avenging Crusader](https://www.wowhead.com/spell=216331)
 - Priest / Discipline
   -  [Power Word: Barrier](https://www.wowhead.com/spell=62618)
   -  [Luminous Barrier](https://www.wowhead.com/spell=271466)
 - Priest / Holy
   -  [Divine Hymn](https://www.wowhead.com/spell=64843)
+  -  [Holy Word: Salvation](https://www.wowhead.com/spell=265202)
 - Shaman / Restoration
   -  [Healing Tide Totem](https://www.wowhead.com/spell=108280)
   -  [Spirit Link Totem](https://www.wowhead.com/spell=98008)

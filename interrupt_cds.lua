@@ -1,89 +1,90 @@
 function(allstates, event, ...)
-  if event == aura_env.events.completed then
-      local sourceGUID, spellId = ...
-      if not sourceGUID or not spellId then return end
-      local key = sourceGUID .. spellId
-      local state = allstates[key]
-      local info = state.cdInfo
-      state.duration = info.cd
-      state.changed = true
-      return true
+    if event == aura_env.events.completed then
+        local sourceGUID, spellId = ...
+        if not sourceGUID or not spellId then return end
+        local key = sourceGUID .. spellId
+        local state = allstates[key]
+        local info = state.cdInfo
+        state.duration = info.cd
+        state.changed = true
+        return true
 
-  elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
-      local subevent = select(2,...)
-      if subevent == "SPELL_CAST_SUCCESS" then
-          local sourceGUID = aura_env.owner(select(4,...))
-          local spellId = select(12,...)
-          local key = sourceGUID .. spellId
-          local state = allstates[key]
-          if not state then return end
-          local info = state.cdInfo
-          state.sourceName = state.name
-          state.expirationTime = state.duration + GetTime()
-          state.duration = info.cd
-          state.interrupted = false
-          state.inverse = true
-          state.changed = true
-          return true
+    elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
+        local subevent = select(2,...)
+        if subevent == "SPELL_CAST_SUCCESS" then
+            local sourceGUID = aura_env.owner(select(4,...))
+            local spellId = select(12,...)
+            local key = sourceGUID .. spellId
+            local state = allstates[key]
+            if not state then return end
+            local info = state.cdInfo
+            state.sourceName = state.name
+            state.expirationTime = state.duration + GetTime()
+            state.duration = info.cd
+            state.interrupted = false
+            state.inverse = true
+            state.changed = true
+            return true
 
-        elseif subevent == "SPELL_INTERRUPT" then
-          local sourceGUID = aura_env.owner(select(4,...))
-          local spellId = select(12,...)
-          local key = sourceGUID .. spellId
-          local state = allstates[key]
-          if not state then return end
-          state.interrupted = true
-          return true
-      end
+            elseif subevent == "SPELL_INTERRUPT" then
+            local sourceGUID = aura_env.owner(select(4,...))
+            local spellId = select(12,...)
+            local key = sourceGUID .. spellId
+            local state = allstates[key]
+            if not state then return end
+            state.interrupted = true
+            return true
+        end
 
-  elseif event == "PLAYER_ENTERING_WORLD" or event == "GROUP_ROSTER_UPDATE" or event == "RAID_ROSTER_UPDATE" or event == aura_env.events.update then
-      for k,v in pairs(allstates) do
-          v.show = false
-          v.changed = true
-      end
+    elseif event == "PLAYER_ENTERING_WORLD" or event == "GROUP_ROSTER_UPDATE" or event == "RAID_ROSTER_UPDATE" or event == aura_env.events.update then
+        for k,v in pairs(allstates) do
+            v.show = false
+            v.changed = true
+        end
 
-      local hascds = false
-      for uid in WA_IterateGroupMembers() do
-          local info = aura_env.inspectLib:GetCachedInfo(UnitGUID(uid))
-          if info then
-              local cds = aura_env.specCDs[info.global_spec_id]
-              if cds then
-                  for spellId, cdInfo in pairs(cds) do
-                      if cdInfo.talent then
-                          cdInfo = cdInfo.talent(info.talents)
-                      end
-                      if cdInfo then
-                          spellId = cdInfo.spellId or spellId
-                          local key = info.guid .. spellId
-                          if allstates[key] then
-                              allstates[key].show = true
-                              allstates[key].changed = true
-                          else
-                              allstates[key] = {
-                                  show = true,
-                                  changed = true,
-                                  sourceName = info.name,
-                                  progressType = "timed",
-                                  autoHide = false,
-                                  icon = select(3, GetSpellInfo(spellId)),
-                                  spellId = spellId,
-                                  name = info.name,
-                                  sourceGUID = info.guid,
-                                  barColor = aura_env.getColor(info),
-                                  duration = cdInfo.cd,
-                                  cdInfo = cdInfo,
-                                  index = cdInfo.index or (info.class..spellId),
-                              }
-                          end
-                          hascds = true
-                      end
-                  end
-              end
-          end
-      end
+        local playerguid = UnitGUID("player")
+        for uid in WA_IterateGroupMembers() do
+            local info = aura_env.inspectLib:GetCachedInfo(UnitGUID(uid))
+            if info then
+                local cds = aura_env.specCDs[info.global_spec_id]
+                if cds then
+                    for spellId, cdInfo in pairs(cds) do
+                        if cdInfo.talent then
+                            cdInfo = cdInfo.talent(info.talents)
+                        end
+                        if cdInfo then
+                            spellId = cdInfo.spellId or spellId
+                            local key = info.guid .. spellId
+                            if allstates[key] then
+                                allstates[key].show = true
+                                allstates[key].changed = true
+                            else
+                                allstates[key] = {
+                                    show = true,
+                                    changed = true,
+                                    sourceName = info.name,
+                                    progressType = "timed",
+                                    autoHide = false,
+                                    icon = select(3, GetSpellInfo(spellId)),
+                                    spellId = spellId,
+                                    name = info.name,
+                                    sourceGUID = info.guid,
+                                    duration = cdInfo.cd,
+                                    cdInfo = cdInfo,
+                                    index = cdInfo.index or (info.class..spellId),
+                                    
+                                    isplayer = (playerguid == info.guid),
+                                    classid = info.class,
+                                }
+                            end
+                        end
+                    end
+                end
+            end
+        end
 
-      return true
-  end
+        return true
+    end
 end
 
 -- PLAYER_ENTERING_WORLD,GROUP_ROSTER_UPDATE,RAID_ROSTER_UPDATE,COMBAT_LOG_EVENT_UNFILTERED,TOSH_INTERRUPT_CD_COMPLETED,TOSH_INTERRUPT_CD_UPDATE

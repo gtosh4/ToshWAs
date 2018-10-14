@@ -4,21 +4,37 @@
     active = {
         display = "effect active",
         type = "bool",
+    },
+    isplayer = {
+        display = "is player",
+        type = "bool",
+    },
+    classid = {
+        display = "Class",
+        type = "string",
     }
   }
 ]]
 
 function(allstates, event, ...)
-    if event == aura_env.events.completed then
+    if event == "ENCOUNTER_END" then
+        for k,v in pairs(allstates) do
+            v.expirationTime = nil
+        end
+        return true
+
+    elseif event == aura_env.events.completed then
         local sourceGUID, spellId = ...
         if not sourceGUID or not spellId then return end
         local key = sourceGUID .. spellId
         local state = allstates[key]
+        if not state then return end
         local info = state.cdInfo
         state.duration = info.cd
         state.expirationTime = (state.duration - info.duration) + GetTime()
         state.inverse = true
         state.active = false
+        aura_env.setindex(state)
         state.changed = true
         return true
 
@@ -29,17 +45,37 @@ function(allstates, event, ...)
             local spellId = select(12,...)
             local key = sourceGUID .. spellId
             local state = allstates[key]
-            if not state then return end
+            if not state then
+                if spellId == 2050 or spellId == 34861 then -- Holy Word: Salvation CD reduction
+                    spellId = 265202
+                    key = sourceGUID .. spellId
+                    state = allstates[key]
+                    if state then
+                        if state.expirationTime and state.expirationTime < GetTime() then
+                            state.expirationTime = state.expirationTime - 30
+                        end
+                    end
+                elseif spellId == 121253 then --  Fortifying Brew
+                    spellId = 115203
+                    key = sourceGUID .. spellId
+                    state = allstates[key]
+                    if state then
+                        if state.expirationTime and state.expirationTime < GetTime() then
+                            state.expirationTime = state.expirationTime - 4
+                        end
+                    end
+                end
+                return
+            end
             local info = state.cdInfo
             if (info.duration or 0) > 0 then
                 state.duration = info.duration
                 state.inverse = false
-                state.sourceName = state.name
                 state.active = true
+                aura_env.setindex(state)
                 local completed = aura_env.events.completed
                 C_Timer.After(info.duration, function() WeakAuras.ScanEvents(completed, sourceGUID, spellId) end)
             else
-                state.sourceName = state.name
                 state.duration = info.cd
                 state.inverse = true
             end
@@ -48,15 +84,40 @@ function(allstates, event, ...)
             return true
         end
 
-    elseif event == "PLAYER_ENTERING_WORLD" or event == "GROUP_ROSTER_UPDATE" or event == "RAID_ROSTER_UPDATE" or event == aura_env.events.update then
+    elseif event == "PLAYER_ENTERING_WORLD" or event == "GROUP_ROSTER_UPDATE" or event == "RAID_ROSTER_UPDATE" or event == "PLAYER_SPECIALIZATION_CHANGED" or event == aura_env.events.update then
         for k,v in pairs(allstates) do
             v.show = false
             v.changed = true
         end
 
-        local hascds = false
+        local testbars = aura_env.config.testbars or 0
+        for i=1,testbars do
+            local tab = math.random(GetNumSpellTabs())
+            local slots = select(4, GetSpellTabInfo(tab))
+            local testSpell = GetSpellBookItemName(math.random(slots), BOOKTYPE_SPELL)
+            local _, _, icon, _, _, _, spellId = GetSpellInfo(testSpell)
+            allstates[i] = {
+                show = true,
+                changed = true,
+                sourceName = "testbar"..i,
+                progressType = "timed",
+                autoHide = false,
+                icon = icon,
+                spellId = spellId,
+                name = "testbar"..i,
+                duration = 10,
+                index = "zzzz"..i, -- sort last
+
+                -- Condition variables
+                active = false,
+                isplayer = false,
+                classid = select(2, UnitClass("player")),
+            }
+        end
+
+        local playerguid = UnitGUID("player")
         for uid in WA_IterateGroupMembers() do
-            local info = aura_env.inspectLib:GetCachedInfo(UnitGUID(uid))
+            local info = UnitIsVisible(uid) and aura_env.inspectLib:GetCachedInfo(UnitGUID(uid))
             if info then
                 local cds = aura_env.specCDs[info.global_spec_id]
                 if cds then
@@ -67,38 +128,42 @@ function(allstates, event, ...)
                         if cdInfo then
                             spellId = cdInfo.spellId or spellId
                             local key = info.guid .. spellId
-                            if allstates[key] then
-                                allstates[key].show = true
-                                allstates[key].changed = true
-                            else
-                                allstates[key] = {
-                                    show = true,
-                                    changed = true,
-                                    sourceName = info.name,
-                                    progressType = "timed",
-                                    autoHide = false,
-                                    icon = select(3, GetSpellInfo(spellId)),
-                                    spellId = spellId,
-                                    name = info.name,
-                                    sourceGUID = info.guid,
-                                    barColor = aura_env.getColor(info),
-                                    duration = cdInfo.cd,
-                                    cdInfo = cdInfo,
-                                    index = cdInfo.index or (info.class..spellId),
-                                }
-                            end
-                            hascds = true
+                            allstates[key] = {
+                                show = true,
+                                changed = true,
+                                sourceName = info.name,
+                                progressType = "timed",
+                                autoHide = false,
+                                icon = select(3, GetSpellInfo(spellId)),
+                                spellId = spellId,
+                                name = info.name,
+                                sourceGUID = info.guid,
+                                duration = cdInfo.cd,
+
+                                info = info,
+                                cdInfo = cdInfo,
+
+                                -- Condition variables
+                                active = false,
+                                isplayer = (playerguid == info.guid),
+                                classid = info.class,
+                            }
+                            aura_env.setindex(allstates[key])
                         end
                     end
                 end
             end
         end
-
         return true
     end
 end
 
--- PLAYER_ENTERING_WORLD,GROUP_ROSTER_UPDATE,RAID_ROSTER_UPDATE,COMBAT_LOG_EVENT_UNFILTERED,TOSH_RAID_CD_COMPLETED,TOSH_RAID_CD_UPDATE
+aura_env.config = {
+    testbars = 0, -- Set this to configure test bars to help with alignment (note: these will only show with the options menu closed)
+    activefirst = true, -- True to sort active abilities first, false to keep it the same order always
+}
+
+-- PLAYER_ENTERING_WORLD,GROUP_ROSTER_UPDATE,RAID_ROSTER_UPDATE,COMBAT_LOG_EVENT_UNFILTERED,ENCOUNTER_START,PLAYER_SPECIALIZATION_CHANGED,TOSH_RAID_CD_COMPLETED,TOSH_RAID_CD_UPDATE
 local events = {
     completed = "TOSH_RAID_CD_COMPLETED",
     update = "TOSH_RAID_CD_UPDATE",
@@ -130,8 +195,19 @@ aura_env.specCDs = {
     },
     [105] = { -- Restoration
         [740] = { -- Tranquility
-            duration = 8,
-            cd = 180,
+            talent = function(talents)
+                if talents[21716] then
+                    return {
+                        duration = 8,
+                        cd = 120,
+                    }
+                else
+                    return {
+                        duration = 8,
+                        cd = 180,
+                    }
+                end
+            end,
         },
     },
 -- Hunter
@@ -163,6 +239,16 @@ aura_env.specCDs = {
         [31821] = { -- Aura Mastery
             duration = 8,
             cd = 180,
+        },
+        [216331] = {
+            talent = function(talents)
+                if talents[22190] then
+                    return {
+                        duration = 20,
+                        cd = 120,
+                    }
+                end
+            end,
         },
     },
     [66] = { -- Protection
@@ -197,6 +283,9 @@ aura_env.specCDs = {
             duration = 8,
             cd = 180,
         },
+        [265202] = { -- Holy Word: Salvation
+            cd = 720,
+        }
     },
     [258] = { -- Shadow
     },
@@ -265,14 +354,6 @@ local inspectCallback = {
 aura_env.inspectLib.RegisterCallback(inspectCallback, "GroupInSpecT_Update", "Update")
 aura_env.inspectLib.RegisterCallback(inspectCallback, "GroupInSpecT_Remove", "Remove")
 
-function aura_env.getColor(info)
-    local classcolor = RAID_CLASS_COLORS[info.class]
-    if not classcolor then return end
-    local r,g,b = classcolor.r,classcolor.g,classcolor.b
-    if UnitIsDeadOrGhost(info.name) then r,g,b = 0.5,0.5,0.5 end
-    return {r=r, g=g, b=b}
-end
-
 function aura_env.owner(guid)
     local type = strsplit("-",guid)
     if type == "Pet" then
@@ -283,4 +364,14 @@ function aura_env.owner(guid)
         end
     end
     return guid
+end
+
+function aura_env.setindex(state)
+    if aura_env.config.activefirst then
+        local pre = state.active and "1" or "2"
+        state.index = pre .. (state.cdInfo.index or (state.info.class .. state.spellId))
+        state.resort = true
+    else
+        state.index = cdInfo.index or (state.info.class .. state.spellId)
+    end
 end

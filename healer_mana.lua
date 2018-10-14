@@ -1,3 +1,16 @@
+--[[
+  {
+    isplayer = {
+        display = "is player",
+        type = "bool",
+    },
+    classid = {
+        display = "Class",
+        type = "string",
+    }
+  }
+]]
+
 function(allstates, ...)
     for k,v in pairs(allstates) do
         v.show = false
@@ -5,39 +18,41 @@ function(allstates, ...)
         v.changed = true
     end
 
+    local sortby = aura_env.config.sortby
+    local playerguid = UnitGUID("player")
     for uid in WA_IterateGroupMembers() do
-        if UnitExists(uid) and UnitPower(uid) and UnitPower(uid) > 0 then
+        if UnitExists(uid) and UnitIsVisible(uid) then
+            local currMana, maxMana = UnitPower(uid), UnitPowerMax(uid)
             local info = aura_env.inspectLib:GetCachedInfo(UnitGUID(uid))
-            if info and aura_env.healSpecs[info.global_spec_id] then
+            if info and aura_env.healSpecs[info.global_spec_id] and currMana and currMana > 0 then
                 local name = UnitName(uid)
-                local currMana, maxMana = UnitPower(uid), UnitPowerMax(uid)
                 local pct = math.floor((currMana / maxMana)*100)
-                local class = select(2, UnitClass(uid))
-                local color = RAID_CLASS_COLORS[class]
-                if allstates[name] then
-                    allstates[name].show = true
-                    allstates[name].value = currMana
-                    allstates[name].total = maxMana
-                    allstates[name].pct = pct
-                    allstates[name].changed = true
-                else
-                    local colorStr = aura_env.RGBPercToHex(color.r, color.g, color.b)
-                    allstates[name] = {
-                        show = true,
-                        changed = true,
+                local class = select(2, UnitClass("player"))
+
+                local state = allstates[info.guid]
+                if not state then
+                    allstates[info.guid] = {
                         progressType = "static",
-                        value = currMana,
-                        total = maxMana,
-                        pct = pct,
                         autoHide = false,
-                        name =  "|cFF"..colorStr..name.."|r",
+                        display = WA_ClassColorName(uid),
+
+                        -- Condition variables
+                        classid = class,
+                        isplayer = (playerguid == info.guid),
                     }
+                    state = allstates[info.guid]
                 end
-                if aura_env.config.sortby == "VALUE" then
-                    allstates[name].index = aura_env.config.sortdir * pct or 0
-                    allstates[name].resort = true
-                elseif aura_env.config.sortby == "CLASS" then
-                    allstates[name].index = class .. name
+                state.show = true
+                state.value = currMana
+                state.total = maxMana
+                state.pct = pct
+                state.changed = true
+
+                if sortby == "VALUE" then
+                    state.index = aura_env.config.sortdir * pct or 0
+                    state.resort = true
+                elseif sortby == "CLASS" then
+                    state.index = class .. name
                 end
             end
         end
@@ -54,17 +69,10 @@ aura_env.config = {
 aura_env.healSpecs = {
     [105] = true, -- Restoration Druid
     [270] = true, -- Mistweaver Monk
-    [65] = true, -- Holy Paladin
+    [65]  = true, -- Holy Paladin
     [256] = true, -- Discipline Priest
     [257] = true, -- Holy Priest
     [264] = true, -- Restoration Shaman
 }
 
 aura_env.inspectLib = LibStub:GetLibrary("LibGroupInSpecT-1.1",true)
-
-function aura_env.RGBPercToHex(r, g, b)
-    r = r <= 1 and r >= 0 and r or 0
-    g = g <= 1 and g >= 0 and g or 0
-    b = b <= 1 and b >= 0 and b or 0
-    return string.format("%02x%02x%02x", r*255, g*255, b*255)
-end

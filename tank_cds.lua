@@ -1,4 +1,4 @@
--- PLAYER_ENTERING_WORLD,GROUP_ROSTER_UPDATE,RAID_ROSTER_UPDATE,COMBAT_LOG_EVENT_UNFILTERED,TOSH_TANK_CD_COMPLETED,TOSH_TANK_CD_UPDATE
+-- PLAYER_ENTERING_WORLD,GROUP_ROSTER_UPDATE,RAID_ROSTER_UPDATE,COMBAT_LOG_EVENT_UNFILTERED,TOSH_TANK_CD_COMPLETED,TOSH_TANK_CD_UPDATE,ENCOUNTER_END
 local events = {
     completed = "TOSH_TANK_CD_COMPLETED",
     update = "TOSH_TANK_CD_UPDATE",
@@ -49,7 +49,7 @@ aura_env.specCDs = {
         },
         [61336] = { -- Survival Instincts
             duration = 6,
-            cd = 180,
+            cd = 240,
         },
     },
     [105] = { -- Restoration
@@ -72,7 +72,7 @@ aura_env.specCDs = {
     [268] = { -- Brewmaster
         [115203] = { -- Fortifying Brew
             duration = 15,
-            cd = 180, -- not really, but close enough
+            cd = 420,
         },
         [115203] = { -- Zen Meditation
             duration = 8,
