@@ -19,8 +19,16 @@ aura_env.specCDs = {
     },
 -- Druid
     [102] = { -- Balance
+        [29166] = {
+            duration = 12,
+            cd = 180,
+        },
     },
     [103] = { -- Feral
+        [29166] = {
+            duration = 12,
+            cd = 180,
+        },
     },
     [104] = { -- Guardian
     },

@@ -7,6 +7,10 @@
     classid = {
         display = "Class",
         type = "string",
+    },
+    pct = {
+        display = "Mana Percent",
+        type = "number",
     }
   }
 ]]

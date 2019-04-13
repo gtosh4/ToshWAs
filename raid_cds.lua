@@ -17,7 +17,7 @@
 ]]
 
 function(allstates, event, ...)
-    if event == "ENCOUNTER_END" then
+    if event == "ENCOUNTER_END" and aura_env.ShouldResetCDs() then
         for k,v in pairs(allstates) do
             v.expirationTime = nil
         end
@@ -34,7 +34,7 @@ function(allstates, event, ...)
         state.expirationTime = (state.duration - info.duration) + GetTime()
         state.inverse = true
         state.active = false
-        aura_env.setindex(state)
+        aura_env:setindex(state)
         state.changed = true
         return true
 
@@ -72,7 +72,7 @@ function(allstates, event, ...)
                 state.duration = info.duration
                 state.inverse = false
                 state.active = true
-                aura_env.setindex(state)
+                aura_env:setindex(state)
                 local completed = aura_env.events.completed
                 C_Timer.After(info.duration, function() WeakAuras.ScanEvents(completed, sourceGUID, spellId) end)
             else
@@ -136,7 +136,7 @@ function(allstates, event, ...)
                                 autoHide = false,
                                 icon = select(3, GetSpellInfo(spellId)),
                                 spellId = spellId,
-                                name = info.name,
+                                name = info.name .. spellId,
                                 sourceGUID = info.guid,
                                 duration = cdInfo.cd,
 
@@ -148,7 +148,7 @@ function(allstates, event, ...)
                                 isplayer = (playerguid == info.guid),
                                 classid = info.class,
                             }
-                            aura_env.setindex(allstates[key])
+                            aura_env:setindex(allstates[key])
                         end
                     end
                 end
@@ -157,11 +157,6 @@ function(allstates, event, ...)
         return true
     end
 end
-
-aura_env.config = {
-    testbars = 0, -- Set this to configure test bars to help with alignment (note: these will only show with the options menu closed)
-    activefirst = true, -- True to sort active abilities first, false to keep it the same order always
-}
 
 -- PLAYER_ENTERING_WORLD,GROUP_ROSTER_UPDATE,RAID_ROSTER_UPDATE,COMBAT_LOG_EVENT_UNFILTERED,ENCOUNTER_START,PLAYER_SPECIALIZATION_CHANGED,TOSH_RAID_CD_COMPLETED,TOSH_RAID_CD_UPDATE
 local events = {
@@ -277,6 +272,20 @@ aura_env.specCDs = {
                 end
             end,
         },
+        [246287] = { -- Evangelism
+            talent = function(talents)
+                if talents[22976] then
+                    return {
+                        duration = 6,
+                        cd = 90,
+                    }
+                end
+            end,
+        },
+        [47536] = { -- Rapture
+            duration = 10,
+            cd = 90,
+        },
     },
     [257] = { -- Holy
         [64843] = { -- Divine Hymn
@@ -284,7 +293,14 @@ aura_env.specCDs = {
             cd = 180,
         },
         [265202] = { -- Holy Word: Salvation
-            cd = 720,
+            talent = function(talents)
+                if talents[23145] then
+                    return {
+                        duration = 10,
+                        cd = 720,
+                    }
+                end
+            end,
         }
     },
     [258] = { -- Shadow
@@ -366,12 +382,29 @@ function aura_env.owner(guid)
     return guid
 end
 
-function aura_env.setindex(state)
-    if aura_env.config.activefirst then
-        local pre = state.active and "1" or "2"
-        state.index = pre .. (state.cdInfo.index or (state.info.class .. state.spellId))
-        state.resort = true
-    else
-        state.index = cdInfo.index or (state.info.class .. state.spellId)
-    end
+aura_env.sortModeFuncs = {
+    [1] = function(state) -- "active > class > player > spellId"
+        local class, player, spellId, active = state.info.class, state.sourceName, state.spellId, state.active
+        state.index = (active and "active" or "inactive").."," ..class..","..player..","..spellId 
+    end,
+    [2] = function(state) -- "class > player > spellId"
+        local class, player, spellId, active = state.info.class, state.sourceName, state.spellId, state.active
+        state.index = class..","..player..","..spellId 
+    end,
+    [3] = function(state) -- "class > spellId > player"
+        local class, player, spellId, active = state.info.class, state.sourceName, state.spellId, state.active
+        state.index = class..","..spellId..","..player
+    end,
+}
+
+function aura_env:setindex(state)
+    self.sortModeFuncs[self.config.sortMode](state)
+end
+
+function aura_env.ShouldResetCDs()
+	local _,_,difficulty = GetInstanceInfo()
+	if difficulty == 3 or difficulty == 4 or difficulty == 5 or difficulty == 6 or difficulty == 7 or difficulty == 14 or difficulty == 15 or difficulty == 16 or difficulty == 17 then
+		return true
+	end
+	return false
 end

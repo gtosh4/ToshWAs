@@ -18,6 +18,8 @@ https://wago.io/rJ3tSWjdX
 - Priest / Discipline
   -  [Power Word: Barrier](https://www.wowhead.com/spell=62618)
   -  [Luminous Barrier](https://www.wowhead.com/spell=271466)
+  -  [Rapture](https://www.wowhead.com/spell=47536)
+  -  [Evangelism](https://www.wowhead.com/spell=246287)
 - Priest / Holy
   -  [Divine Hymn](https://www.wowhead.com/spell=64843)
   -  [Holy Word: Salvation](https://www.wowhead.com/spell=265202)
