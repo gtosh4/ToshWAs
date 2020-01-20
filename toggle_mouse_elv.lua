@@ -1,0 +1,1 @@
+/script local E = unpack(ElvUI); local AB = E:GetModule("ActionBars"); for b=1,5 do local r = AB["handledBars"]["bar"..b]; r:EnableMouse(not r:IsMouseEnabled()); for i=1, NUM_ACTIONBAR_BUTTONS do local t = r.buttons[i]; t:EnableMouse(not t:IsMouseEnabled())end end

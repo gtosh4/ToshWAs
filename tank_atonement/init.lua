@@ -8,14 +8,15 @@ end
 local LCG = LibStub('LibCustomGlow-1.0')
 local glowTypes = {'Standard', 'Pixel', 'AutoCast'}
 
-aura_env.glowFrames = setmetatable({}, {
+local glowFrames = setmetatable({}, {
     __index = function(t, k)
         t[k] = {}
         return t[k]
     end
 })
+aura_env.glowFrames = glowFrames
 
-function aura_env.Glow(frame, show, id, glowType)
+local glowFunc = function(frame, show, id, glowType)
     if not frame then return end
 
     id = id or aura_env.id
@@ -60,10 +61,9 @@ function aura_env.Glow(frame, show, id, glowType)
         end
     end
 end
+aura_env.Glow = glowFunc
 
 -- hide glow on opening WeakAurasOptions
-local glowFunc = aura_env.Glow
-local glowFrames = aura_env.glowFrames
 hooksecurefunc(
     WeakAuras,
     'OpenOptions',

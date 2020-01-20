@@ -62,6 +62,7 @@ function(allstates, event, ...) -- COMBAT_LOG_EVENT_UNFILTERED,PLAYER_REGEN_DISA
       v.show = false
       v.changed = true
     end
+    table.wipe(aura_env.tanks)
 
     return true
   end
