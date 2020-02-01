@@ -15,7 +15,7 @@ aura_env.basestate = {
     progressType = 'timed',
     autoHide = false,
     duration = 10,
-    spellid = aura_env.spellid,
+    spellId = aura_env.spellid,
 }
 aura_env.basestate.icon = select(3,GetSpellInfo(aura_env.spellid))
 
