@@ -101,3 +101,11 @@ aura_env.assigns[307217] = {
         {players={"Sci", "Toshpal"}, spellid=wings},
     },
 }
+
+-- 
+aura_env.assigns[314583] = {
+    [1] = {
+    },
+    [2] = {
+    },
+}

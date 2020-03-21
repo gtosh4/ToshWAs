@@ -1,31 +1,30 @@
-function(allstates, event, args) -- TOSH_ASSIGN
-    if event ~= 'TOSH_ASSIGN' then return end
+function(allstates, event, id, players, args) -- TOSH_ASSIGN_TIMER
+    if event ~= 'TOSH_ASSIGN_TIMER' then return end
     if not args then return end
 
-
-    local state = allstates[args.id] or {
+    local state = {
         autoHide = true,
         progressType = 'timed',
     }
     state.show = true
     state.changed = true
 
-    state.duration = args.time_until
-    state.expirationTime = GetTime()+args.time_until
+    state.duration = args.duration
+    state.expirationTime = GetTime()+args.duration
 
-    state.icon = args.icon
-    state.spellId = args.spellId
+    state.spellId = args.spellid
+    state.icon = args.icon or select(3, GetSpellInfo(args.spellid))
 
     state.text = args.text
 
     local me = UnitName("player")
-    for p in pairs(args.players) do
+    for _, p in pairs(players) do
         local s = setmetatable({}, {__index=state})
         s.name = p
         
         if not aura_env.config.only_me or p == me then
             s.mine = (p == me)
-            allstates[args.id..":"..p] = s
+            allstates[id..":"..p] = s
         end
     end
     

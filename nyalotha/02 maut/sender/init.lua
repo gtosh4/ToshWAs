@@ -63,22 +63,22 @@ aura_env.assigns[314337] = {
 -- Obsidian Skin
 aura_env.assigns[305722] = {
     [1] = {
-        {players="Sci", spellid=wings, time_until=10},
-        {players="Yellowy", spellid=hymn, time_until=10},
-        {players="Tehkz", spellid=rapture, time_until=10},
-        {players="Tehkz", spellid=evang, time_until=10},
-        {players="Pluie", spellid=incarn, time_until=10},
+        {players="Sci", spellid=wings, duration=10},
+        {players="Yellowy", spellid=hymn, duration=10},
+        {players="Tehkz", spellid=rapture, duration=10},
+        {players="Tehkz", spellid=evang, duration=10},
+        {players="Pluie", spellid=incarn, duration=10},
 
-        {players="Yellowy", spellid=salv, time_until=40},
-        {players="Pluie", spellid=tranq, time_until=40},
+        {players="Yellowy", spellid=salv, duration=40},
+        {players="Pluie", spellid=tranq, duration=40},
     },
     [2] = {
-        {players="Sci", spellid=wings, time_until=10},
-        {players="Yellowy", spellid=hymn, time_until=10},
-        {players="Pluie", spellid=incarn, time_until=10},
+        {players="Sci", spellid=wings, duration=10},
+        {players="Yellowy", spellid=hymn, duration=10},
+        {players="Pluie", spellid=incarn, duration=10},
         
-        {players="Pluie", spellid=tranq, time_until=40},
-        {players="Tehkz", spellid=rapture, time_until=40},
-        {players="Tehkz", spellid=evang, time_until=40},
+        {players="Pluie", spellid=tranq, duration=40},
+        {players="Tehkz", spellid=rapture, duration=40},
+        {players="Tehkz", spellid=evang, duration=40},
     }
 }
