@@ -1,7 +1,5 @@
 {
   expirationTime = true,
-  activeTime = {
-    display = "CD Active",
-    type = "timer",
-  },
+  duration = true,
+  stacks = true,
 }

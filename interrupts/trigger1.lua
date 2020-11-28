@@ -1,4 +1,4 @@
-function(allstates, event, ...) -- ZT_ADD,ZT_TRIGGER,ZT_REMOVE,COMBAT_LOG_EVENT_UNFILTERED
+function(allstates, event, ...) -- ZT_ADD, ZT_TRIGGER, ZT_REMOVE, COMBAT_LOG_EVENT_UNFILTERED
     if event == "ZT_ADD" then
         local type, watchID, member, spellID = ...
         
@@ -44,7 +44,7 @@ function(allstates, event, ...) -- ZT_ADD,ZT_TRIGGER,ZT_REMOVE,COMBAT_LOG_EVENT_
             state.classColor = member.classColor
             state.guid = member.GUID
             state.spellid = spellID
-
+            
             -- Custom Vars
             state.isplayer = aura_env:IsPlayer(member)
             
@@ -53,7 +53,7 @@ function(allstates, event, ...) -- ZT_ADD,ZT_TRIGGER,ZT_REMOVE,COMBAT_LOG_EVENT_
             
             return true
         end
-
+        
     elseif event == "ZT_TRIGGER" then
         local type, watchID, duration, expiration = ...
         
@@ -63,7 +63,6 @@ function(allstates, event, ...) -- ZT_ADD,ZT_TRIGGER,ZT_REMOVE,COMBAT_LOG_EVENT_
             state.duration = duration
             state.expirationTime = expiration
             if expiration > GetTime() then
-                print("cast", watchID)
                 if state.interrupted == nil then
                     state.interrupted = false
                 end
@@ -72,33 +71,32 @@ function(allstates, event, ...) -- ZT_ADD,ZT_TRIGGER,ZT_REMOVE,COMBAT_LOG_EVENT_
             end
             return true
         end
-
+        
     elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
         local subevent = select(2,...)
         if subevent ~= "SPELL_INTERRUPT" then return end
-      
+        
         local sourceGUID = aura_env.owner(select(4,...))
         local spellId = select(12,...)
-      
+        
+        -- Handle druid interrupts
+        if spellId == 93985 then spellId = 106839 end
+        if spellId == 97547 then spellId = 78675 end
+        
         local watchID = aura_env.watches[sourceGUID][spellId]
         if not watchID then return end
         
-        print("interrupt", watchID)
-      
+        
         local state = allstates[watchID]
         if not state then
-          print("state not found", watchID)
-          for i, s in pairs(allstates) do
-            print("state", i, s.name, s.interrupted or "nil")
-          end
-          return
+            return
         end
-      
+        
         state.interrupted = true
         state.changed = true
-      
+        
         return true
-
+        
     elseif event == "ZT_REMOVE" then
         local type, watchID = ...
         local state = allstates[watchID]
@@ -110,3 +108,4 @@ function(allstates, event, ...) -- ZT_ADD,ZT_TRIGGER,ZT_REMOVE,COMBAT_LOG_EVENT_
         end
     end
 end
+
